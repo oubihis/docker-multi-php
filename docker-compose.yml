@@ -1,0 +1,77 @@
+version: "3.8"
+
+services:
+  # PHP 7.4 Service
+  php74:
+    build:
+      context: .
+      dockerfile: docker/php74.Dockerfile
+    volumes:
+      - ./www:/var/www/html
+      - ./config/php74/php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - app-network
+
+  # PHP 8.2 Service
+  php82:
+    build:
+      context: .
+      dockerfile: docker/php82.Dockerfile
+    volumes:
+      - ./www:/var/www/html
+      - ./config/php82/php.ini:/usr/local/etc/php/php.ini
+    networks:
+      - app-network
+
+  # Apache Service with SSL
+  apache:
+    build:
+      context: .
+      dockerfile: docker/apache.Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./www:/var/www/html
+      - ./config/apache/vhost.conf:/usr/local/apache2/conf/extra/vhost.conf
+      - ./certs:/usr/local/apache2/certs
+    depends_on:
+      - php74
+      - php82
+    networks:
+      - app-network
+
+  # MySQL Service
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
+
+  # phpMyAdmin Service
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      PMA_HOST: mysql
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      - mysql
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:

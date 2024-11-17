@@ -1,0 +1,31 @@
+# Docker SSL Certificates
+certs/
+
+# Environment variables
+.env
+
+# IDE specific files
+.idea/
+.vscode/
+*.sublime-workspace
+*.sublime-project
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# PHP files
+vendor/
+composer.lock
+
+# Logs
+*.log
+
+# Project specific
+www/*
+!www/index.php
