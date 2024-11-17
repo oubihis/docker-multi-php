@@ -131,6 +131,34 @@ After changing the PHP version, restart the containers:
 docker-compose restart
 ```
 
+## Adding New PHP Versions
+
+This project supports multiple PHP versions, and you can easily add more versions based on your needs.
+
+Currently supported versions:
+
+- PHP 7.4
+- PHP 8.2
+
+Need another PHP version? Check out our detailed guide:
+[How to Add New PHP Versions](https://github.com/oubihis/docker-multi-php/wiki/How-to-Add-New-PHP-Versions)
+
+Example supported paths:
+
+```
+http://localhost/        # Default (PHP 7.4)
+http://localhost/php74/  # PHP 7.4
+http://localhost/php82/  # PHP 8.2
+```
+
+To add a new PHP version:
+
+1. Follow the guide in the Wiki
+2. Create issue if you need help
+3. Share your success with the community
+
+💡 Tip: The Wiki guide includes complete instructions, troubleshooting tips, and best practices for adding new PHP versions.
+
 ## Project Structure
 
 ```
