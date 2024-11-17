@@ -10,7 +10,7 @@ A complete Docker development environment featuring multiple PHP versions (7.4 a
 - phpMyAdmin
 - Composer included in PHP containers
 - Support for multiple projects
-- HTTPS with trusted local certificates
+- HTTPS with trusted local certificates using mkcert
 
 ## Prerequisites
 
@@ -18,31 +18,7 @@ A complete Docker development environment featuring multiple PHP versions (7.4 a
 - [Docker Compose](https://docs.docker.com/compose/install/) (included in Docker Desktop)
 - [mkcert](https://github.com/FiloSottile/mkcert) for SSL certificates
 
-## Directory Structure
-
-```
-.
-├── docker-compose.yml
-├── .env
-├── certs/
-│   ├── cert.pem
-│   └── key.pem
-├── config/
-│   ├── apache/
-│   │   └── vhost.conf
-│   ├── php74/
-│   │   └── php.ini
-│   └── php82/
-│       └── php.ini
-├── docker/
-│   ├── apache.Dockerfile
-│   ├── php74.Dockerfile
-│   └── php82.Dockerfile
-└── www/
-    └── index.php
-```
-
-## Installation
+## Quick Start
 
 1. Clone the repository:
 
@@ -72,19 +48,19 @@ mkdir certs
 mkcert -key-file certs/key.pem -cert-file certs/cert.pem localhost 127.0.0.1 ::1
 ```
 
-3. Create environment file:
+3. Create and configure environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-4. Update the .env file with your desired settings:
+4. Update the `.env` file with these recommended development settings:
 
 ```env
-MYSQL_ROOT_PASSWORD=your_root_password
-MYSQL_DATABASE=your_database
-MYSQL_USER=your_user
-MYSQL_PASSWORD=your_password
+MYSQL_ROOT_PASSWORD=root
+MYSQL_DATABASE=mydatabase
+MYSQL_USER=admin
+MYSQL_PASSWORD=admin
 ```
 
 5. Build and start the containers:
@@ -94,19 +70,46 @@ docker-compose build --no-cache
 docker-compose up -d
 ```
 
-## Usage
+## Accessing Services
 
-### Accessing Services
+### Web Server
 
-- Website:
-  - HTTP: `http://localhost`
-  - HTTPS: `https://localhost`
-- phpMyAdmin: `http://localhost:8080`
-- MySQL:
-  - Host: `localhost`
-  - Port: `3306`
+- HTTP: `http://localhost`
+- HTTPS: `https://localhost`
 
-### PHP Versions
+### phpMyAdmin
+
+- URL: `http://localhost:8080`
+- Default credentials:
+  ```
+  Server: mysql
+  Username: root
+  Password: root
+  ```
+  or use the custom user:
+  ```
+  Server: mysql
+  Username: admin (or MYSQL_USER from .env)
+  Password: admin (or MYSQL_PASSWORD from .env)
+  ```
+
+### MySQL
+
+- Host: `localhost` (from host machine) or `mysql` (from containers)
+- Port: `3306`
+- Root credentials:
+  ```
+  Username: root
+  Password: root
+  ```
+- User credentials:
+  ```
+  Database: mydatabase (or MYSQL_DATABASE from .env)
+  Username: admin (or MYSQL_USER from .env)
+  Password: admin (or MYSQL_PASSWORD from .env)
+  ```
+
+## PHP Versions
 
 To switch between PHP versions, modify the Apache virtual host configuration in `config/apache/vhost.conf`:
 
@@ -128,28 +131,39 @@ After changing the PHP version, restart the containers:
 docker-compose restart
 ```
 
-### Working with Projects
+## Project Structure
 
-Place your project files in the `www` directory. This directory is mounted in both PHP containers and the Apache container.
+```
+.
+├── docker-compose.yml
+├── .env
+├── certs/
+│   ├── cert.pem
+│   └── key.pem
+├── config/
+│   ├── apache/
+│   │   └── vhost.conf
+│   ├── php74/
+│   │   └── php.ini
+│   └── php82/
+│       └── php.ini
+├── docker/
+│   ├── apache.Dockerfile
+│   ├── php74.Dockerfile
+│   └── php82.Dockerfile
+└── www/
+    └── index.php
+```
 
-### Database Connection
+## Common Commands
 
-Use these settings in your application's database configuration:
-
-- Host: `mysql`
-- Database: value from `MYSQL_DATABASE` in .env
-- Username: value from `MYSQL_USER` in .env
-- Password: value from `MYSQL_PASSWORD` in .env
-
-### Docker Commands
-
-Start containers:
+Start environment:
 
 ```bash
 docker-compose up -d
 ```
 
-Stop containers:
+Stop environment:
 
 ```bash
 docker-compose down
@@ -158,9 +172,17 @@ docker-compose down
 View logs:
 
 ```bash
+# All containers
 docker-compose logs
-# For specific service
-docker-compose logs [service_name]
+
+# Specific container
+docker-compose logs [container_name]
+```
+
+Restart services:
+
+```bash
+docker-compose restart
 ```
 
 Rebuild containers:
@@ -169,43 +191,80 @@ Rebuild containers:
 docker-compose build --no-cache
 ```
 
-### Adding Custom PHP Extensions
+## Troubleshooting
 
-1. Edit the appropriate Dockerfile (`docker/php74.Dockerfile` or `docker/php82.Dockerfile`)
-2. Add required extensions using `docker-php-ext-install`
-3. Rebuild the containers
+### Cannot access phpMyAdmin
 
-Example:
+1. Check if containers are running:
 
-```dockerfile
-# Install additional PHP extensions
-RUN docker-php-ext-install gd pdo_mysql mysqli
+```bash
+docker-compose ps
+```
+
+2. Check phpMyAdmin logs:
+
+```bash
+docker-compose logs phpmyadmin
+```
+
+3. Verify MySQL is running:
+
+```bash
+docker-compose logs mysql
+```
+
+### MySQL Connection Issues
+
+1. Verify credentials in `.env` file
+2. Check MySQL container status:
+
+```bash
+docker-compose ps mysql
+```
+
+3. Try connecting directly to MySQL:
+
+```bash
+docker-compose exec mysql mysql -u root -proot
+```
+
+### SSL Certificate Issues
+
+1. Regenerate certificates using mkcert:
+
+```bash
+mkcert -install
+mkcert -key-file certs/key.pem -cert-file certs/cert.pem localhost 127.0.0.1 ::1
+```
+
+2. Restart containers:
+
+```bash
+docker-compose restart
 ```
 
 ## Customization
 
 ### PHP Configuration
 
-Modify PHP settings in:
-
-- `config/php74/php.ini` for PHP 7.4
-- `config/php82/php.ini` for PHP 8.2
+- PHP 7.4: `config/php74/php.ini`
+- PHP 8.2: `config/php82/php.ini`
 
 ### Apache Configuration
 
-Modify Apache settings in:
-
-- `config/apache/vhost.conf`
+- Virtual Hosts: `config/apache/vhost.conf`
 
 ### MySQL Configuration
 
-MySQL settings can be modified through environment variables in the `.env` file.
+- Environment variables in `.env`
+- Custom configuration can be added to `config/mysql/my.cnf`
 
 ## Security Notes
 
-- Default passwords in `.env.example` are for demonstration only. Change them in your `.env` file.
-- Generated SSL certificates are for local development only.
-- Don't use this configuration in production without proper security hardening.
+- These credentials are for development only
+- Change all passwords in production
+- SSL certificates are for local development only
+- Don't use this configuration in production without security hardening
 
 ## Contributing
 
@@ -218,3 +277,11 @@ MySQL settings can be modified through environment variables in the `.env` file.
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Support
+
+If you encounter any issues or need help, please:
+
+1. Check the troubleshooting section
+2. Look through existing issues
+3. Create a new issue with detailed information about your problem
