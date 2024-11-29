@@ -46,6 +46,9 @@ mkcert -install
 # Create certificates
 mkdir certs
 mkcert -key-file certs/key.pem -cert-file certs/cert.pem localhost 127.0.0.1 ::1
+
+#if update dont forget
+chmod 644 certs/cert.pem certs/key.pem
 ```
 
 3. Create and configure environment file:
